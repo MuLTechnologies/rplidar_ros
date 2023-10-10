@@ -224,7 +224,7 @@ void set_pwm_cb(const std_msgs::Int32::ConstPtr & msg)
 {
     if (drv)
     {
-        drv->setMotorPWM(msg->data);
+        drv->setMotorSpeed(msg->data);
     }
 }
 
