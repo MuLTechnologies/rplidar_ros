@@ -35,6 +35,7 @@
 #include "ros/ros.h"
 #include "sensor_msgs/LaserScan.h"
 #include "std_srvs/Empty.h"
+#include <std_msgs/Int32.h>
 #include "sl_lidar.h" 
 
 #ifndef _countof
@@ -219,6 +220,14 @@ static float getAngle(const sl_lidar_response_measurement_node_hq_t& node)
     return node.angle_z_q14 * 90.f / 16384.f;
 }
 
+void set_pwm_cb(const std_msgs::Int32::ConstPtr & msg)
+{
+    if (drv)
+    {
+        drv->setMotorPWM(msg->data);
+    }
+}
+
 int main(int argc, char * argv[]) {
     ros::init(argc, argv, "rplidar_node");
     
@@ -240,6 +249,7 @@ int main(int argc, char * argv[]) {
     double scan_frequency;
     ros::NodeHandle nh;
     ros::Publisher scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 1000);
+    ros::Subscriber pwm_sub = nh.subscribe("set_pwm", 10, set_pwm_cb);
     ros::NodeHandle nh_private("~");
     nh_private.param<std::string>("channel_type", channel_type, "serial");
     nh_private.param<std::string>("tcp_ip", tcp_ip, "192.168.0.7"); 

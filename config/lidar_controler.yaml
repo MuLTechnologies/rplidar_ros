@@ -1,0 +1,5 @@
+  histeresis: 0.2
+  desired_frequency: 10.0
+  pwm_control_step: 10
+  number_of_msgs_to_calculate_frequency: 40
+  path_to_pwm_file: "/cart_configuration/cart_info/lidar_pwm.txt"
