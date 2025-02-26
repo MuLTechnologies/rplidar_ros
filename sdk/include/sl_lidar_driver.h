@@ -233,6 +233,8 @@ namespace sl {
 
         virtual int getChannelType() = 0;
 
+        virtual bool isTimeout() = 0;
+
     private:
 
     };

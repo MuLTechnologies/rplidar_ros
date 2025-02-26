@@ -44,6 +44,7 @@ namespace sl {
         {
             _device = device;
             _baudrate = baudrate;
+            _is_timeout = false;
         }
 
         ~SerialPortChannel()
@@ -92,9 +93,12 @@ namespace sl {
             size_hint = size_holder;
             if (result == (_word_size_t)rp::hal::serial_rxtx::ANS_DEV_ERR)
                 return RESULT_OPERATION_FAIL;
-            if (result == (_word_size_t)rp::hal::serial_rxtx::ANS_TIMEOUT)
+            if (result == (_word_size_t)rp::hal::serial_rxtx::ANS_TIMEOUT) {
+                _is_timeout = true;
                 return RESULT_OPERATION_TIMEOUT;
-
+            }
+            _is_timeout = false;
+            _last_valid_read = std::chrono::steady_clock::now();
             return RESULT_OK;
         }
 
@@ -130,12 +134,21 @@ namespace sl {
             return CHANNEL_TYPE_SERIALPORT;
         }
 
+        virtual bool isTimeout() {
+            if (_is_timeout && (std::chrono::steady_clock::now() - _last_valid_read > TIMEOUT_DURATION)) {
+                return true;
+            }
+            return false;
+        }
+
     private:
         rp::hal::serial_rxtx  * _rxtxSerial;
         bool _closePending;
         std::string _device;
         int _baudrate;
-
+        bool _is_timeout;
+        std::chrono::steady_clock::time_point _last_valid_read;
+        const std::chrono::seconds TIMEOUT_DURATION = std::chrono::seconds(3); // Duration to observe timeouts before setting _is_timeout.
     };
 
     Result<IChannel*> createSerialPortChannel(const std::string& device, int baudrate)

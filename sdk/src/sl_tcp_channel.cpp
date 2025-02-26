@@ -111,6 +111,11 @@ namespace sl {
         int getChannelType() {
             return CHANNEL_TYPE_TCP;
         }
+
+        virtual bool isTimeout() {
+            // Not implemented for tcp channel
+            return false;
+        }
     private:
         rp::net::StreamSocket * _binded_socket;
         rp::net::SocketAddress _socket;
