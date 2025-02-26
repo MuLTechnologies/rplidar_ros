@@ -35,6 +35,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include <std_srvs/srv/empty.hpp>
+#include <std_msgs/msg/bool.hpp>
 #include "sl_lidar.h"
 #include "math.h"
 
@@ -365,6 +366,15 @@ class RPlidarNode : public rclcpp::Node
         is_scanning = false;
     }
 
+    void publish_is_timeout(bool is_timeout) {
+        std_msgs::msg::Bool msg;
+        msg.data = is_timeout;
+        is_timeout_pub->publish(msg);
+        if(is_timeout) {
+            RCLCPP_ERROR_THROTTLE(this->get_logger(), *this->get_clock(), 5000, "Timeout deteced on serial data.");
+        }
+    }
+
 public:    
     int work_loop()
     {        
@@ -374,6 +384,8 @@ public:
         int ver_patch = SL_LIDAR_SDK_VERSION_PATCH;
         RCLCPP_INFO(this->get_logger(),"RPLidar running on ROS2 package rplidar_ros. RPLIDAR SDK Version:%d.%d.%d",ver_major,ver_minor,ver_patch);
     
+        is_timeout_pub = this->create_publisher<std_msgs::msg::Bool>("~/is_timeout", rclcpp::QoS(rclcpp::KeepLast(10)));
+
         sl_result     op_result;
         // create the driver instance
         drv = *createLidarDriver();
@@ -408,12 +420,14 @@ public:
         
         // get rplidar device info
         if (!getRPLIDARDeviceInfo(drv)) {
+            publish_is_timeout(_channel->isTimeout());
             delete drv; drv = nullptr;
             return -1;
         }
 
         // check health...
         if (!checkRPLIDARHealth(drv)) {
+            publish_is_timeout(_channel->isTimeout());
             delete drv; drv = nullptr;
             return -1;
         }
@@ -463,6 +477,7 @@ public:
                     }
                 }
             }
+            publish_is_timeout(_channel->isTimeout());
 
             start_scan_time = this->now();
             op_result = drv->grabScanDataHq(nodes, count);
@@ -553,6 +568,7 @@ public:
 
   private:
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr scan_pub;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr is_timeout_pub;
     rclcpp::Service<std_srvs::srv::Empty>::SharedPtr start_motor_service;
     rclcpp::Service<std_srvs::srv::Empty>::SharedPtr stop_motor_service;
 

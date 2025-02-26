@@ -33,6 +33,7 @@
 #include "sl_lidar_driver.h"
 #include "hal/abs_rxtx.h"
 #include "hal/socket.h"
+#include <chrono>
 
 
 namespace sl {
