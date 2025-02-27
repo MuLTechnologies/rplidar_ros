@@ -87,6 +87,7 @@ class RPlidarNode : public rclcpp::Node
         this->declare_parameter<std::string>("topic_name",std::string("scan"));
         this->declare_parameter<std::string>("scan_mode",std::string());
         this->declare_parameter<float>("scan_frequency",10);
+        this->declare_parameter<int>("serial_data_timeout_duration", 3);
         
         this->get_parameter_or<std::string>("channel_type", channel_type, "serial");
         this->get_parameter_or<std::string>("tcp_ip", tcp_ip, "192.168.0.7"); 
@@ -102,6 +103,8 @@ class RPlidarNode : public rclcpp::Node
         this->get_parameter_or<bool>("auto_standby", auto_standby, false);
         this->get_parameter_or<std::string>("topic_name", topic_name, "scan");
         this->get_parameter_or<std::string>("scan_mode", scan_mode, std::string());
+        this->get_parameter_or<int>("serial_data_timeout_duration", serial_data_timeout_duration, 3);
+
         if(channel_type == "udp")
             this->get_parameter_or<float>("scan_frequency", scan_frequency, 20.0);
         else
@@ -402,7 +405,7 @@ public:
             _channel = *createUdpChannel(udp_ip, udp_port);
         }
         else{
-            _channel = *createSerialPortChannel(serial_port, serial_baudrate);
+            _channel = *createSerialPortChannel(serial_port, serial_baudrate, serial_data_timeout_duration);
         }
         if (SL_IS_FAIL((drv)->connect(_channel))) {
             if(channel_type == "tcp"){
@@ -591,6 +594,7 @@ public:
     float scan_frequency;
     /* State */
     bool is_scanning = false;
+    int serial_data_timeout_duration;
 
     ILidarDriver *drv = nullptr;
 };

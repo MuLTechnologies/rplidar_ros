@@ -41,11 +41,12 @@ namespace sl {
     class SerialPortChannel : public ISerialPortChannel
     {
     public:
-        SerialPortChannel(const std::string& device, int baudrate) :_rxtxSerial(rp::hal::serial_rxtx::CreateRxTx())
+        SerialPortChannel(const std::string& device, int baudrate, int serial_data_timeout_duration) :_rxtxSerial(rp::hal::serial_rxtx::CreateRxTx())
         {
             _device = device;
             _baudrate = baudrate;
             _is_timeout = false;
+            serial_data_timeout_duration_ = std::chrono::seconds(serial_data_timeout_duration);
         }
 
         ~SerialPortChannel()
@@ -136,7 +137,7 @@ namespace sl {
         }
 
         virtual bool isTimeout() {
-            if (_is_timeout && (std::chrono::steady_clock::now() - _last_valid_read > TIMEOUT_DURATION)) {
+            if (_is_timeout && (std::chrono::steady_clock::now() - _last_valid_read > serial_data_timeout_duration_)) {
                 return true;
             }
             return false;
@@ -149,12 +150,12 @@ namespace sl {
         int _baudrate;
         bool _is_timeout;
         std::chrono::steady_clock::time_point _last_valid_read;
-        const std::chrono::seconds TIMEOUT_DURATION = std::chrono::seconds(3); // Duration to observe timeouts before setting _is_timeout.
+        std::chrono::seconds serial_data_timeout_duration_;
     };
 
-    Result<IChannel*> createSerialPortChannel(const std::string& device, int baudrate)
+    Result<IChannel*> createSerialPortChannel(const std::string& device, int baudrate, int serial_data_timeout_duration)
     {
-        return new  SerialPortChannel(device, baudrate);
+        return new  SerialPortChannel(device, baudrate, serial_data_timeout_duration);
     }
 
 }
