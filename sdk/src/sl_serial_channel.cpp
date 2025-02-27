@@ -46,7 +46,7 @@ namespace sl {
             _device = device;
             _baudrate = baudrate;
             _is_timeout = false;
-            serial_data_timeout_duration_ = std::chrono::seconds(serial_data_timeout_duration);
+            _serial_data_timeout_duration = std::chrono::seconds(serial_data_timeout_duration);
         }
 
         ~SerialPortChannel()
@@ -137,7 +137,7 @@ namespace sl {
         }
 
         virtual bool isTimeout() {
-            if (_is_timeout && (std::chrono::steady_clock::now() - _last_valid_read > serial_data_timeout_duration_)) {
+            if (_is_timeout && (std::chrono::steady_clock::now() - _last_valid_read > _serial_data_timeout_duration)) {
                 return true;
             }
             return false;
@@ -150,7 +150,7 @@ namespace sl {
         int _baudrate;
         bool _is_timeout;
         std::chrono::steady_clock::time_point _last_valid_read;
-        std::chrono::seconds serial_data_timeout_duration_;
+        std::chrono::seconds _serial_data_timeout_duration;
     };
 
     Result<IChannel*> createSerialPortChannel(const std::string& device, int baudrate, int serial_data_timeout_duration)
