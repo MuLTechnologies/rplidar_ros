@@ -33,6 +33,7 @@
 #include "sl_lidar_driver.h"
 #include "hal/abs_rxtx.h"
 #include "hal/socket.h"
+#include <chrono>
 
 
 namespace sl {
@@ -40,10 +41,12 @@ namespace sl {
     class SerialPortChannel : public ISerialPortChannel
     {
     public:
-        SerialPortChannel(const std::string& device, int baudrate) :_rxtxSerial(rp::hal::serial_rxtx::CreateRxTx())
+        SerialPortChannel(const std::string& device, int baudrate, int serial_data_timeout_duration) :_rxtxSerial(rp::hal::serial_rxtx::CreateRxTx())
         {
             _device = device;
             _baudrate = baudrate;
+            _is_timeout = false;
+            _serial_data_timeout_duration = std::chrono::seconds(serial_data_timeout_duration);
         }
 
         ~SerialPortChannel()
@@ -92,9 +95,12 @@ namespace sl {
             size_hint = size_holder;
             if (result == (_word_size_t)rp::hal::serial_rxtx::ANS_DEV_ERR)
                 return RESULT_OPERATION_FAIL;
-            if (result == (_word_size_t)rp::hal::serial_rxtx::ANS_TIMEOUT)
+            if (result == (_word_size_t)rp::hal::serial_rxtx::ANS_TIMEOUT) {
+                _is_timeout = true;
                 return RESULT_OPERATION_TIMEOUT;
-
+            }
+            _is_timeout = false;
+            _last_valid_read = std::chrono::steady_clock::now();
             return RESULT_OK;
         }
 
@@ -130,17 +136,26 @@ namespace sl {
             return CHANNEL_TYPE_SERIALPORT;
         }
 
+        virtual bool isTimeout() {
+            if (_is_timeout && (std::chrono::steady_clock::now() - _last_valid_read > _serial_data_timeout_duration)) {
+                return true;
+            }
+            return false;
+        }
+
     private:
         rp::hal::serial_rxtx  * _rxtxSerial;
         bool _closePending;
         std::string _device;
         int _baudrate;
-
+        bool _is_timeout;
+        std::chrono::steady_clock::time_point _last_valid_read;
+        std::chrono::seconds _serial_data_timeout_duration;
     };
 
-    Result<IChannel*> createSerialPortChannel(const std::string& device, int baudrate)
+    Result<IChannel*> createSerialPortChannel(const std::string& device, int baudrate, int serial_data_timeout_duration)
     {
-        return new  SerialPortChannel(device, baudrate);
+        return new  SerialPortChannel(device, baudrate, serial_data_timeout_duration);
     }
 
 }

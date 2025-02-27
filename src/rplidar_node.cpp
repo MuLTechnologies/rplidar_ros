@@ -35,6 +35,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include <std_srvs/srv/empty.hpp>
+#include <std_msgs/msg/bool.hpp>
 #include "sl_lidar.h"
 #include "math.h"
 
@@ -86,6 +87,7 @@ class RPlidarNode : public rclcpp::Node
         this->declare_parameter<std::string>("topic_name",std::string("scan"));
         this->declare_parameter<std::string>("scan_mode",std::string());
         this->declare_parameter<float>("scan_frequency",10);
+        this->declare_parameter<int>("serial_data_timeout_duration", 3);
         
         this->get_parameter_or<std::string>("channel_type", channel_type, "serial");
         this->get_parameter_or<std::string>("tcp_ip", tcp_ip, "192.168.0.7"); 
@@ -101,6 +103,8 @@ class RPlidarNode : public rclcpp::Node
         this->get_parameter_or<bool>("auto_standby", auto_standby, false);
         this->get_parameter_or<std::string>("topic_name", topic_name, "scan");
         this->get_parameter_or<std::string>("scan_mode", scan_mode, std::string());
+        this->get_parameter_or<int>("serial_data_timeout_duration", serial_data_timeout_duration, 3);
+
         if(channel_type == "udp")
             this->get_parameter_or<float>("scan_frequency", scan_frequency, 20.0);
         else
@@ -365,6 +369,15 @@ class RPlidarNode : public rclcpp::Node
         is_scanning = false;
     }
 
+    void publish_is_timeout(bool is_timeout) {
+        std_msgs::msg::Bool msg;
+        msg.data = is_timeout;
+        is_timeout_pub->publish(msg);
+        if(is_timeout) {
+            RCLCPP_ERROR_THROTTLE(this->get_logger(), *this->get_clock(), 5000, "Timeout deteced on serial data.");
+        }
+    }
+
 public:    
     int work_loop()
     {        
@@ -374,6 +387,8 @@ public:
         int ver_patch = SL_LIDAR_SDK_VERSION_PATCH;
         RCLCPP_INFO(this->get_logger(),"RPLidar running on ROS2 package rplidar_ros. RPLIDAR SDK Version:%d.%d.%d",ver_major,ver_minor,ver_patch);
     
+        is_timeout_pub = this->create_publisher<std_msgs::msg::Bool>("~/is_timeout", rclcpp::QoS(rclcpp::KeepLast(10)));
+
         sl_result     op_result;
         // create the driver instance
         drv = *createLidarDriver();
@@ -390,7 +405,7 @@ public:
             _channel = *createUdpChannel(udp_ip, udp_port);
         }
         else{
-            _channel = *createSerialPortChannel(serial_port, serial_baudrate);
+            _channel = *createSerialPortChannel(serial_port, serial_baudrate, serial_data_timeout_duration);
         }
         if (SL_IS_FAIL((drv)->connect(_channel))) {
             if(channel_type == "tcp"){
@@ -408,12 +423,14 @@ public:
         
         // get rplidar device info
         if (!getRPLIDARDeviceInfo(drv)) {
+            publish_is_timeout(_channel->isTimeout());
             delete drv; drv = nullptr;
             return -1;
         }
 
         // check health...
         if (!checkRPLIDARHealth(drv)) {
+            publish_is_timeout(_channel->isTimeout());
             delete drv; drv = nullptr;
             return -1;
         }
@@ -463,6 +480,7 @@ public:
                     }
                 }
             }
+            publish_is_timeout(_channel->isTimeout());
 
             start_scan_time = this->now();
             op_result = drv->grabScanDataHq(nodes, count);
@@ -553,6 +571,7 @@ public:
 
   private:
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr scan_pub;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr is_timeout_pub;
     rclcpp::Service<std_srvs::srv::Empty>::SharedPtr start_motor_service;
     rclcpp::Service<std_srvs::srv::Empty>::SharedPtr stop_motor_service;
 
@@ -575,6 +594,7 @@ public:
     float scan_frequency;
     /* State */
     bool is_scanning = false;
+    int serial_data_timeout_duration;
 
     ILidarDriver *drv = nullptr;
 };

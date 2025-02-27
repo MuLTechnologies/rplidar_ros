@@ -233,6 +233,8 @@ namespace sl {
 
         virtual int getChannelType() = 0;
 
+        virtual bool isTimeout() = 0;
+
     private:
 
     };
@@ -257,7 +259,7 @@ namespace sl {
     * \param baudrate Baudrate
     *                   Please refer to the datasheet for the baudrate (maybe 115200 or 256000)
     */
-    Result<IChannel*> createSerialPortChannel(const std::string& device, int baudrate);
+    Result<IChannel*> createSerialPortChannel(const std::string& device, int baudrate, int serial_data_timeout_duration);
 
     /**
     * Create a TCP channel

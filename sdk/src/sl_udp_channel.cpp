@@ -115,6 +115,12 @@ namespace sl {
             return CHANNEL_TYPE_UDP;
         }
 
+        virtual bool isTimeout() {
+            // Not implemented for udp channel
+            return false;
+        }
+
+
 	private:
 		rp::net::DGramSocket * _binded_socket;
 		rp::net::SocketAddress _socket;

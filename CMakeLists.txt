@@ -46,6 +46,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(std_msgs REQUIRED)
 
 ################################################################################
 # Build
@@ -62,6 +63,7 @@ ament_target_dependencies(rplidar_node
   rclcpp
   std_srvs
   sensor_msgs
+  std_msgs
 )
 
 add_executable(rplidar_composition src/rplidar_node.cpp ${RPLIDAR_SDK_SRC})
@@ -69,6 +71,7 @@ ament_target_dependencies(rplidar_composition
   rclcpp
   std_srvs
   sensor_msgs
+  std_msgs
 )
 
 add_executable(rplidar_client src/rplidar_client.cpp)
@@ -76,6 +79,7 @@ ament_target_dependencies(rplidar_client
   rclcpp
   std_srvs
   sensor_msgs
+  std_msgs
 )
 ################################################################################
 # Install

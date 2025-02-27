@@ -69,7 +69,7 @@ namespace rp { namespace standalone{ namespace rplidar {
         switch (_channelType)
         {
         case CHANNEL_TYPE_SERIALPORT:
-            _channel = (*createSerialPortChannel(path, portOrBaud));
+            _channel = (*createSerialPortChannel(path, portOrBaud, 3));
             break;
         case CHANNEL_TYPE_TCP:
             _channel = *createTcpChannel(path, portOrBaud);
