@@ -23,9 +23,9 @@ set(RPLIDAR_SDK_PATH "${PROJECT_SOURCE_DIR}/sdk/")
 if(APPLE)
 add_compile_definitions(_MACOS)
 FILE(GLOB RPLIDAR_SDK_SRC
-"${RPLIDAR_SDK_PATH}/src/arch/macOS/*.cpp"
-"${RPLIDAR_SDK_PATH}/src/dataunpacker/*.cpp"
-"${RPLIDAR_SDK_PATH}/src/dataunpacker/unpacker/*.cpp"
+  "${RPLIDAR_SDK_PATH}/src/arch/macOS/*.cpp"
+  "${RPLIDAR_SDK_PATH}/src/dataunpacker/*.cpp"
+  "${RPLIDAR_SDK_PATH}/src/dataunpacker/unpacker/*.cpp"
   "${RPLIDAR_SDK_PATH}/src/hal/*.cpp"
   "${RPLIDAR_SDK_PATH}/src/*.cpp"
 )
