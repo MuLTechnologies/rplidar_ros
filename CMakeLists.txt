@@ -28,26 +28,26 @@ FILE(GLOB RPLIDAR_SDK_SRC
 "${RPLIDAR_SDK_PATH}/src/dataunpacker/unpacker/*.cpp"
   "${RPLIDAR_SDK_PATH}/src/hal/*.cpp"
   "${RPLIDAR_SDK_PATH}/src/*.cpp"
-  )
-  else()
-  FILE(GLOB RPLIDAR_SDK_SRC 
+)
+else()
+FILE(GLOB RPLIDAR_SDK_SRC 
   "${RPLIDAR_SDK_PATH}/src/arch/linux/*.cpp"
   "${RPLIDAR_SDK_PATH}/src/dataunpacker/*.cpp"
   "${RPLIDAR_SDK_PATH}/src/dataunpacker/unpacker/*.cpp"
   "${RPLIDAR_SDK_PATH}/src/hal/*.cpp"
   "${RPLIDAR_SDK_PATH}/src/*.cpp"
-  )
-  endif()
-  
-  ################################################################################
-  # Find ament packages and libraries for ament and system dependencies
-  ################################################################################
-  find_package(ament_cmake REQUIRED)
-  find_package(rclcpp REQUIRED)
-  find_package(sensor_msgs REQUIRED)
-  find_package(std_srvs REQUIRED)
-  find_package(std_msgs REQUIRED)
-  find_package(backward_ros REQUIRED)
+)
+endif()
+
+################################################################################
+# Find ament packages and libraries for ament and system dependencies
+################################################################################
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(backward_ros REQUIRED)
 
 ################################################################################
 # Build
